@@ -37,10 +37,16 @@ var PreviewServer = function (config, root, options) {
 util.inherits(PreviewServer, ConfigEmitter);
 
 PreviewServer.prototype.listen = function () {
-    if (this.config.parsed_opts.path) {
+    if (this.config.parsed_opts.path && 
+        fs.existsSync(this.config.parsed_opts.path) &&
+        fs.lstatSync(this.config.parsed_opts.path).isFile()) {
         var project = new Project(this.config, this.config.parsed_opts.path);
         this.registerProject(project);
         this.setDefaultProject(project);
+    }
+    else if(!fs.existsSync(this.config.parsed_opts.path) || 
+        !fs.lstatSync(this.config.parsed_opts.path).isDirectory()) {
+        throw new Error('incorrect path, not a .mml file, or a valid directory');
     }
     this.server.listen(this.config.parsed_opts.port, this.config.parsed_opts.host);
     this.config.log('PreviewServer started, you can browse http://' + this.config.parsed_opts.host + ':' + this.config.parsed_opts.port);
@@ -66,6 +72,10 @@ PreviewServer.prototype.serve = function (req, res) {
     if (urlpath === '/') this.serveHome(uri, req, res);
     else if (this.hasRoute(urlpath)) this._routes[urlpath].call(this, req, res);
     else if (this.projects[els[1]]) this.forwardToProject(uri, els[1], req, res);
+    else if (fs.existsSync(path.join(this.config.parsed_opts.path, els[1], 'project.mml'))) {
+        this.registerProject(new Project(this.config, path.join(this.config.parsed_opts.path, els[1], 'project.mml')));
+        this.forwardToProject(uri, els[1], req, res);
+    }
     else this.serveFile(urlpath, res);
 };
 

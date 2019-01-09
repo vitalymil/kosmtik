@@ -6,3 +6,5 @@ v8.log
 tmp/
 plugins-src/*
 projects/
+.vscode/
+Dockerfile
