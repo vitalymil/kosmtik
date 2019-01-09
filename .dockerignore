@@ -7,4 +7,5 @@ tmp/
 plugins-src/*
 projects/
 .vscode/
+.git
 Dockerfile
